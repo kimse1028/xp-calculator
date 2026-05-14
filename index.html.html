@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>파티 경험치 분배 계산기</title>
+<style>
+  body { 
+    font-family: 'Malgun Gothic', sans-serif; 
+    padding: 20px; 
+    max-width: 500px; 
+    margin: auto; 
+    background-color: #f4f7f6; 
+  }
+  .container { 
+    background-color: white; 
+    padding: 25px; 
+    border-radius: 12px; 
+    box-shadow: 0 8px 16px rgba(0,0,0,0.08); 
+  }
+  h2 { 
+    text-align: center; 
+    color: #2c3e50; 
+    margin-bottom: 25px;
+  }
+  .member { 
+    display: flex; 
+    align-items: center; 
+    margin-bottom: 12px; 
+    padding: 12px; 
+    background: #f8f9fa; 
+    border-radius: 8px; 
+    border: 1px solid #e9ecef;
+  }
+  .member input[type="number"] { 
+    width: 80px; 
+    margin-right: 15px; 
+    padding: 8px; 
+    border: 1px solid #ced4da; 
+    border-radius: 6px; 
+    font-size: 15px;
+  }
+  button { 
+    padding: 10px 15px; 
+    cursor: pointer; 
+    border: none; 
+    border-radius: 6px; 
+    font-weight: bold; 
+    transition: background-color 0.2s;
+  }
+  #addBtn { 
+    background-color: #20c997; 
+    color: white; 
+    width: 100%; 
+    margin-bottom: 20px; 
+    font-size: 16px; 
+  }
+  #addBtn:hover { background-color: #12b886; }
+  .deleteBtn { 
+    background: #ff6b6b; 
+    color: white; 
+    margin-left: auto; 
+  }
+  .deleteBtn:hover { background: #fa5252; }
+  .killer-radio { 
+    margin-right: 10px; 
+    width: 18px; 
+    height: 18px; 
+    cursor: pointer; 
+  }
+  .killer-label { 
+    font-size: 15px; 
+    font-weight: bold; 
+    color: #495057;
+    margin-right: 15px; 
+    cursor: pointer;
+  }
+  .result-box { 
+    margin-top: 25px; 
+    padding: 20px; 
+    background: #e7f5ff; 
+    border-radius: 8px; 
+    border-left: 5px solid #339af0; 
+  }
+  .result-box h3 { margin-top: 0; color: #1864ab; font-size: 18px; }
+  .result-item { 
+    margin-bottom: 10px; 
+    font-size: 16px; 
+    color: #343a40; 
+  }
+  
+  /* 새로 추가된 버튼 스타일 */
+  .link-btn-container {
+    margin-top: 30px;
+    text-align: center;
+  }
+  .maplanet-btn {
+    display: inline-block;
+    background: linear-gradient(135deg, #6e8efb, #a777e3);
+    color: white;
+    padding: 14px 28px;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 50px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    width: 80%;
+    box-sizing: border-box;
+  }
+  .maplanet-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    background: linear-gradient(135deg, #5a7df0, #9661d9);
+  }
+  .maplanet-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h2>⚔️ 파티 경험치 분배 계산기</h2>
+    <button id="addBtn">+ 파티원 추가</button>
+    <div id="membersList"></div>
+    <div class="result-box">
+      <h3>📊 계산 결과 (처치자 20% 보너스 적용)</h3>
+      <div id="results">파티원을 추가하고 레벨을 입력하세요.</div>
+    </div>
+
+    <!-- 맵플래닛 이동 버튼 -->
+    <div class="link-btn-container">
+      <a href="https://maplanet.net/" target="_blank" class="maplanet-btn">
+        🚀 메이플래닛(Maplanet) 바로가기
+      </a>
+    </div>
+  </div>
+
+  <script>
+    let members = [
+      { id: 1, level: 98, isKiller: true },
+      { id: 2, level: 83, isKiller: false },
+      { id: 3, level: 88, isKiller: false }
+    ];
+    let nextId = 4;
+
+    function render() {
+      const list = document.getElementById('membersList');
+      list.innerHTML = '';
+      let totalLevel = members.reduce((sum, m) => sum + (m.level || 0), 0);
+
+      members.forEach((m, index) => {
+        const div = document.createElement('div');
+        div.className = 'member';
+
+        const radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.name = 'killer';
+        radio.id = 'killer_' + m.id;
+        radio.className = 'killer-radio';
+        radio.checked = m.isKiller;
+        radio.onchange = () => {
+          members.forEach(member => member.isKiller = false);
+          m.isKiller = true;
+          render();
+        };
+
+        const label = document.createElement('label');
+        label.htmlFor = 'killer_' + m.id;
+        label.className = 'killer-label';
+        label.innerText = `P${index + 1} (막타)`;
+
+        const inputLabel = document.createElement('span');
+        inputLabel.innerText = `레벨: `;
+        inputLabel.style.marginRight = '5px';
+        inputLabel.style.fontSize = '14px';
+
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.value = m.level;
+        input.min = 1;
+        input.oninput = (e) => {
+          m.level = parseInt(e.target.value) || 0;
+          render();
+        };
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'deleteBtn';
+        delBtn.innerText = '삭제';
+        delBtn.onclick = () => {
+          if (members.length <= 2) {
+            alert('파티 경험치 분배는 최소 2명 이상이어야 합니다.');
+            return;
+          }
+          members = members.filter(member => member.id !== m.id);
+          if (m.isKiller && members.length > 0) members[0].isKiller = true;
+          render();
+        };
+
+        div.appendChild(radio);
+        div.appendChild(label);
+        div.appendChild(inputLabel);
+        div.appendChild(input);
+        div.appendChild(delBtn);
+        list.appendChild(div);
+      });
+
+      const results = document.getElementById('results');
+      results.innerHTML = '';
+      if (totalLevel === 0) return;
+
+      members.forEach((m, index) => {
+        const share = m.level / totalLevel;
+        let expPercent = m.isKiller ? 20 + (80 * share) : 80 * share;
+        
+        const resDiv = document.createElement('div');
+        resDiv.className = 'result-item';
+        resDiv.innerHTML = `<strong>P${index + 1} ${m.isKiller ? '<span style="color:#fa5252;">(처치자)</span>' : ''}</strong> : ${expPercent.toFixed(2)}%`;
+        results.appendChild(resDiv);
+      });
+    }
+
+    document.getElementById('addBtn').onclick = () => {
+      members.push({ id: nextId++, level: 1, isKiller: false });
+      render();
+    };
+
+    render();
+  </script>
+</body>
+</html>
