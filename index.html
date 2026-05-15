@@ -89,7 +89,6 @@
     color: #343a40; 
   }
   
-  /* 새로 추가된 버튼 스타일 */
   .link-btn-container {
     margin-top: 30px;
     text-align: center;
@@ -129,7 +128,6 @@
       <div id="results">파티원을 추가하고 레벨을 입력하세요.</div>
     </div>
 
-    <!-- 맵플래닛 이동 버튼 -->
     <div class="link-btn-container">
       <a href="https://maplanet.net/" target="_blank" class="maplanet-btn">
         🚀 메이플래닛(Maplanet) 바로가기
@@ -139,16 +137,16 @@
 
   <script>
     let members = [
-      { id: 1, level: 98, isKiller: true },
-      { id: 2, level: 83, isKiller: false },
-      { id: 3, level: 88, isKiller: false }
+      { id: 1, level: 0, isKiller: true },
+      { id: 2, level: 0, isKiller: false },
+      { id: 3, level: 0, isKiller: false }
     ];
     let nextId = 4;
 
-    function render() {
+    // UI 리스트를 그리는 함수
+    function renderList() {
       const list = document.getElementById('membersList');
       list.innerHTML = '';
-      let totalLevel = members.reduce((sum, m) => sum + (m.level || 0), 0);
 
       members.forEach((m, index) => {
         const div = document.createElement('div');
@@ -160,10 +158,11 @@
         radio.id = 'killer_' + m.id;
         radio.className = 'killer-radio';
         radio.checked = m.isKiller;
+        // 막타를 쳤을 때만 화면 전체(라디오 버튼 상태 등)를 다시 그림
         radio.onchange = () => {
           members.forEach(member => member.isKiller = false);
           m.isKiller = true;
-          render();
+          renderList(); 
         };
 
         const label = document.createElement('label');
@@ -180,9 +179,12 @@
         input.type = 'number';
         input.value = m.level;
         input.min = 1;
+        
+        // 💡 수정된 부분: 레벨 입력 시에는 '결과창'만 업데이트하여 포커스 유지
         input.oninput = (e) => {
-          m.level = parseInt(e.target.value) || 0;
-          render();
+          let val = parseInt(e.target.value);
+          m.level = isNaN(val) ? 0 : val;
+          renderResults(); 
         };
 
         const delBtn = document.createElement('button');
@@ -195,7 +197,7 @@
           }
           members = members.filter(member => member.id !== m.id);
           if (m.isKiller && members.length > 0) members[0].isKiller = true;
-          render();
+          renderList();
         };
 
         div.appendChild(radio);
@@ -206,9 +208,20 @@
         list.appendChild(div);
       });
 
+      // 리스트를 다 그리면 결과창도 한 번 업데이트
+      renderResults();
+    }
+
+    // 결과(비율)만 계산해서 그리는 함수
+    function renderResults() {
       const results = document.getElementById('results');
       results.innerHTML = '';
-      if (totalLevel === 0) return;
+      
+      let totalLevel = members.reduce((sum, m) => sum + (m.level || 0), 0);
+      if (totalLevel === 0) {
+        results.innerHTML = '파티원 레벨을 정확히 입력해 주세요.';
+        return;
+      }
 
       members.forEach((m, index) => {
         const share = m.level / totalLevel;
@@ -221,12 +234,14 @@
       });
     }
 
+    // 파티원 추가 버튼
     document.getElementById('addBtn').onclick = () => {
       members.push({ id: nextId++, level: 1, isKiller: false });
-      render();
+      renderList();
     };
 
-    render();
+    // 처음 켰을 때 초기 렌더링
+    renderList();
   </script>
 </body>
 </html>
